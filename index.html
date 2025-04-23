@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sweet Art Nana - Order System</title>
+    <meta name="description" content="Sweet Art Nana - Cake Order Management System">
+    <meta name="theme-color" content="#FFF1F1">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Sweet Art Nana">
+    
+    <!-- PWA Icons -->
+    <link rel="icon" type="image/png" sizes="196x196" href="icons/favicon-196.png">
+    <link rel="apple-touch-icon" href="icons/apple-icon-180.png">
+    <link rel="apple-touch-startup-image" href="icons/apple-splash-2048-2732.jpg">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#420F2F',
+                        secondary: '#EB918F',
+                        accent: '#FFF1F1',
+                        background: '#FFF1F1'
+                    },
+                    fontFamily: {
+                        playfair: ['Playfair Display', 'serif'],
+                        montserrat: ['Montserrat', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+        .logo-text {
+            font-family: 'Playfair Display', serif;
+        }
+        
+        /* PWA Install Prompt */
+        #pwa-install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background-color: #FFF1F1;
+            border: 2px solid #EB918F;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+        }
+        
+        /* Estilos específicos para impressão */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 0.5cm;
+            }
+            
+            body {
+                background-color: #FFF1F1 !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            .print-only {
+                display: block !important;
+            }
+            
+            #reportPrintable, #salesReportPrintable {
+                display: block !important;
+                background-color: #FFF1F1 !important;
+                padding: 1cm;
+                max-width: 100%;
+                font-size: 10pt;
+                line-height: 1.2;
+            }
+            
+            .print-logo {
+                width: 80px;
+                margin: 0 auto 10px;
+            }
+            
+            .print-section {
+                margin-bottom: 8px;
+            }
+            
+            .print-heading {
+                font-size: 14pt;
+                font-weight: bold;
+                color: #420F2F !important;
+                margin-bottom: 5px;
+                font-family: 'Playfair Display', serif;
+            }
+            
+            .print-subheading {
+                font-size: 11pt;
+                font-weight: bold;
+                color: #420F2F !important;
+                margin-bottom: 3px;
+            }
+            
+            .print-text {
+                font-size: 10pt;
+                margin-bottom: 2px;
+            }
+            
+            .print-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
+            
+            .print-border {
+                border-top: 1px solid #EB918F !important;
+                padding-top: 5px;
+                margin-top: 5px;
+            }
+            
+            .print-footer {
+                margin-top: 10px;
+                text-align: center;
+                color: #EB918F !important;
+            }
+
+            .print-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 10px;
+            }
+
+            .print-table th {
+                text-align: left;
+                font-weight: bold;
+                padding: 3px;
+                border-bottom: 1px solid #EB918F !important;
+                color: #420F2F !important;
+            }
+
+            .print-table td {
+                padding: 3px;
+                border-bottom: 1px solid #EB918F !important;
+            }
+        }
+        
+        .print-only {
+            display: none;
+        }
+
+        /* Tabs */
+        .tab-active {
+            background-color: #FFF1F1;
+            border-color: #EB918F;
+            color: #420F2F;
+            font-weight: 600;
+        }
+
+        /* Chart styles */
+        .chart-bar {
+            height: 20px;
+            background-color: #EB918F;
+            margin-bottom: 5px;
+            transition: width 0.5s ease-in-out;
+        }
+        
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .mobile-scroll {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .mobile-full {
+                width: 100%;
+            }
+            
+            .mobile-stack {
+                flex-direction: column;
+            }
+            
+            .mobile-stack > * {
+                margin-bottom: 0.5rem;
+                width: 100%;
+            }
+            
+            .mobile-text-sm {
+                font-size: 0.875rem;
+            }
+            
+            .mobile-p-2 {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-background p-4 md:p-8">
+    <!-- PWA Install Prompt -->
+    <div id="pwa-install-prompt" class="flex flex-col md:flex-row items-center justify-between">
+        <div class="flex-1">
+            <h3 class="text-lg font-medium text-primary mb-2">Install Sweet Art Nana App</h3>
+            <p class="text-sm text-gray-700">Install this app on your device for quick access even when offline!</p>
+        </div>
+        <div class="flex gap-2 mt-3 md:mt-0">
+            <button id="pwa-install-button" class="bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 transition">
+                Install
+            </button>
+            <button id="pwa-close-button" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400 transition">
+                Not Now
+            </button>
+        </div>
+    </div>
+
+    <div class="max-w-6xl mx-auto bg-white p-6 rounded-lg shadow-md no-print">
+        <!-- Logo Principal -->
+        <div class="text-center mb-8">
+            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-YVvaxkDykvGsUiCRydgU4VPqOPq3bb.png" alt="Sweet Art Nana Logo" class="w-64 mx-auto mb-4">
+        </div>
+
+        <!-- Tabs de navegação -->
+        <div class="flex border-b border-secondary mb-8 mobile-scroll">
+            <button id="tab-orders" class="px-4 py-2 border-b-2 tab-active">Orders</button>
+            <button id="tab-sales" class="px-4 py-2 border-b-2 border-transparent">Sales Dashboard</button>
+        </div>
+
+        <!-- Conteúdo das Tabs -->
+        <div id="content-orders">
+            <!-- Formulário Principal -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <!-- Formulário de Cliente -->
+                <div class="bg-[#FFF1F1] p-6 rounded-lg shadow-sm border border-secondary">
+                    <h2 class="text-2xl font-playfair font-semibold text-primary mb-6">Client Details</h2>
+                    <form id="clientForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-primary mb-1">Client Name</label>
+                            <input type="text" id="clientName" required class="w-full p-2 border border-secondary rounded focus:outline-none focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary mb-1">Email</label>
+                            <input type="email" id="clientEmail" required class="w-full p-2 border border-secondary rounded focus:outline-none focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary mb-1">Phone</label>
+                            <input type="tel" id="clientPhone" required class="w-full p-2 border border-secondary rounded focus:outline-none focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary mb-1">Delivery Address (Queensland, Australia)</label>
+                            <textarea id="clientAddress" rows="3" class="w-full p-2 border border-secondary rounded focus:outline-none focus:border-primary"></textarea>
+                        </div>
+                        <button type="submit" class="w-full bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 transition">
+                            Register Client
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Formulário de Pedido -->
+                <div class="bg-[#FFF1F1] p-6 rounded-lg shadow-sm border border-secondary">
+                    <h2 class="text-2xl font-playfair font-semibold text-primary mb-6">New Order</h2>
+                    <form id="orderForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-primary mb-1">Select Client</label>
+                            <select id="clientSelect" required class="w-full p-2 border border-secondary rounded focus:outline-none focus:border-primary">
+                                <option value="">Select a Client</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Detalhes do Bolo -->
+                        <div>
+                            <label class="block text-sm font-medium text-primary mb-1">Cake Type</label>
+                            <input type="text" id="cakeType" required class="w-full p-2 border border-secondary rounded focus:outline-none focus:border-primary">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary mb-1">Cake Details</label>
+                            <textarea id="cakeDetails" rows="6" class="w-full p-2 border border-secondary rounded focus:outline-none focus:border-primary" 
+                                placeholder="Describe cake details (flavor, filling, frosting, decoration, etc)"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-primary mb-1">Cake Price (AUD)</label>
+                            <input type="number" id="cakePrice" required min="0" step="0.01" class="w-full p-2 border border-secondary rounded focus:outline-none focus:border-primary">
+                        </div>
+
+                        <!-- Extra Sweets -->
+                        <div>
+                            <label class="block text-sm font-medium text-primary mb-1">Extra Sweets</label>
+                            <textarea id="extraSweets" rows="4" class="w-full p-2 border border-secondary rounded focus:outline-none focus:border-primary mb-2" 
+                                placeholder="Describe extra sweets (e.g., Brazilian fudge balls-Brigadeiros, pao de mel, etc)"></textarea>
+                            <div>
+                                <label class="block text-sm font-medium text-primary mb-1">Extra Sweets Price (AUD)</label>
+                                <input type="number" id="extraSweetsPrice" min="0" step="0.01" class="w-full p-2 border border-secondary rounded focus:outline-none focus:border-primary">
+                            </div>
+                        </div>
+
+                        <!-- Customized Party Kit -->
+                        <div>
+                            <label class="block text-sm font-medium text-primary mb-1">Customized Party Kit</label>
+                            <textarea id="partyKit" rows="4" class="w-full p-2 border border-secondary rounded focus:outline-none focus:border-primary mb-2" 
+                                placeholder="Describe your customized party kit (e.g., cupcakes, cake pops, macarons, personalized cookies, mini desserts)"></textarea>
+                            <div>
+                                <label class="block text-sm font-medium text-primary mb-1">Party Kit Price (AUD)</label>
+                                <input type="number" id="partyKitPrice" min="0" step="0.01" class="w-full p-2 border border-secondary rounded focus:outline-none focus:border-primary">
+                            </div>
+                        </div>
+
+                        <!-- Delivery Fee -->
+                        <div>
+                            <label class="block text-sm font-medium text-primary mb-1">Delivery Fee (AUD)</label>
+                            <input type="number" id="deliveryFee" min="0" step="0.01" class="w-full p-2 border border-secondary rounded focus:outline-none focus:border-primary">
+                        </div>
+
+                        <!-- Discount -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-primary mb-1">Discount (%)</label>
+                                <input type="number" id="discountPercent" min="0" max="100" step="1" class="w-full p-2 border border-secondary rounded focus:outline-none focus:border-primary">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-primary mb-1">Discount Value (AUD)</label>
+                                <input type="text" id="discountValue" readonly class="w-full p-2 bg-white border border-secondary rounded">
+                            </div>
+                        </div>
+
+                        <!-- Valores -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-primary mb-1">Delivery Date</label>
+                                <input type="date" id="dueDate" required class="w-full p-2 border border-secondary rounded">
+                            </div>
+                        </div>
+
+                        <!-- Pagamento -->
+                        <div class="border-t border-secondary pt-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-primary mb-1">Total Value</label>
+                                    <input type="text" id="totalValue" readonly class="w-full p-2 bg-white border border-secondary rounded">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-primary mb-1">Deposit (50%)</label>
+                                    <input type="text" id="signalValue" readonly class="w-full p-2 bg-white border border-secondary rounded">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 mobile-stack">
+                            <button type="submit" class="flex-1 bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 transition">
+                                Create Order
+                            </button>
+                            <button type="button" id="generateReport" class="flex-1 bg-secondary text-white px-4 py-2 rounded hover:bg-secondary/90 transition">
+                                Generate Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Conteúdo da Tab de Vendas -->
+        <div id="content-sales" class="hidden">
+            <div class="bg-[#FFF1F1] p-6 rounded-lg shadow-sm border border-secondary mb-8">
+                <h2 class="text-2xl font-playfair font-semibold text-primary mb-6">Sales Dashboard</h2>
+                
+                <!-- Filtros de período -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-medium text-primary mb-3">Filter by Period</h3>
+                    <div class="flex flex-wrap gap-3 mobile-scroll">
+                        <button id="filter-all" class="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition">All Time</button>
+                        <button id="filter-today" class="px-4 py-2 bg-secondary text-white rounded hover:bg-secondary/90 transition">Today</button>
+                        <button id="filter-week" class="px-4 py-2 bg-secondary text-white rounded hover:bg-secondary/90 transition">This Week</button>
+                        <button id="filter-month" class="px-4 py-2 bg-secondary text-white rounded hover:bg-secondary/90 transition">This Month</button>
+                        <button id="filter-year" class="px-4 py-2 bg-secondary text-white rounded hover:bg-secondary/90 transition">This Year</button>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 mt-3">
+                        <label class="text-sm font-medium text-primary">Custom Range:</label>
+                        <input type="date" id="date-from" class="p-2 border border-secondary rounded focus:outline-none focus:border-primary">
+                        <span class="text-primary">to</span>
+                        <input type="date" id="date-to" class="p-2 border border-secondary rounded focus:outline-none focus:border-primary">
+                        <button id="filter-custom" class="px-4 py-2 bg-secondary text-white rounded hover:bg-secondary/90 transition">Apply</button>
+                    </div>
+                </div>
+                
+                <!-- Resumo de vendas -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-secondary">
+                        <h4 class="text-sm font-medium text-primary mb-1">Total Orders</h4>
+                        <p id="total-orders" class="text-2xl font-bold text-primary">0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-secondary">
+                        <h4 class="text-sm font-medium text-primary mb-1">Total Revenue</h4>
+                        <p id="total-revenue" class="text-2xl font-bold text-primary">AUD 0.00</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-secondary">
+                        <h4 class="text-sm font-medium text-primary mb-1">Average Order Value</h4>
+                        <p id="avg-order" class="text-2xl font-bold text-primary">AUD 0.00</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-secondary">
+                        <h4 class="text-sm font-medium text-primary mb-1">Total Discounts</h4>
+                        <p id="total-discounts" class="text-2xl font-bold text-primary">AUD 0.00</p>
+                    </div>
+                </div>
+                
+                <!-- Gráficos -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-secondary">
+                        <h3 class="text-lg font-medium text-primary mb-3">Revenue by Product Type</h3>
+                        <div id="product-chart" class="h-64">
+                            <!-- Gráfico de barras simples -->
+                            <div class="mb-2">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm text-primary">Cakes</span>
+                                    <span id="cake-revenue" class="text-sm font-medium text-primary">AUD 0.00</span>
+                                </div>
+                                <div id="cake-bar" class="chart-bar w-0 rounded"></div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm text-primary">Extra Sweets</span>
+                                    <span id="sweets-revenue" class="text-sm font-medium text-primary">AUD 0.00</span>
+                                </div>
+                                <div id="sweets-bar" class="chart-bar w-0 rounded"></div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm text-primary">Party Kits</span>
+                                    <span id="party-revenue" class="text-sm font-medium text-primary">AUD 0.00</span>
+                                </div>
+                                <div id="party-bar" class="chart-bar w-0 rounded"></div>
+                            </div>
+                            <div class="mb-2">
+                                <div class="flex justify-between mb-1">
+                                    <span class="text-sm text-primary">Delivery Fees</span>
+                                    <span id="delivery-revenue" class="text-sm font-medium text-primary">AUD 0.00</span>
+                                </div>
+                                <div id="delivery-bar" class="chart-bar w-0 rounded"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-secondary">
+                        <h3 class="text-lg font-medium text-primary mb-3">Monthly Revenue Trend</h3>
+                        <div id="monthly-chart" class="h-64">
+                            <!-- Gráfico de tendência mensal será gerado dinamicamente -->
+                            <div id="monthly-bars" class="h-full flex items-end justify-between"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Lista de pedidos -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-3 flex-wrap gap-2">
+                        <h3 class="text-lg font-medium text-primary">Order List</h3>
+                        <button id="print-sales-report" class="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90 transition">
+                            Print Sales Report
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto mobile-scroll">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-primary text-white">
+                                    <th class="p-2 text-left">Order Date</th>
+                                    <th class="p-2 text-left">Client</th>
+                                    <th class="p-2 text-left">Cake Type</th>
+                                    <th class="p-2 text-left">Delivery Date</th>
+                                    <th class="p-2 text-right">Cake Price</th>
+                                    <th class="p-2 text-right">Extras</th>
+                                    <th class="p-2 text-right">Party Kit</th>
+                                    <th class="p-2 text-right">Delivery Fee</th>
+                                    <th class="p-2 text-right">Discount</th>
+                                    <th class="p-2 text-right">Total</th>
+                                    <th class="p-2 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table-body">
+                                <!-- Dados serão preenchidos via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-4">
+                    <button id="clear-all-orders" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+                        Clear All Orders
+                    </button>
+                </div>
+                <!-- Gerenciamento de Clientes -->
+                <div class="bg-[#FFF1F1] p-6 rounded-lg shadow-sm border border-secondary mt-8">
+                    <h3 class="text-lg font-medium text-primary mb-3">Client Management</h3>
+                    <div class="overflow-x-auto mobile-scroll">
+                        <table class="w-full border-collapse">
+                            <thead>
+                                <tr class="bg-primary text-white">
+                                    <th class="p-2 text-left">Name</th>
+                                    <th class="p-2 text-left">Email</th>
+                                    <th class="p-2 text-left">Phone</th>
+                                    <th class="p-2 text-left">Address</th>
+                                    <th class="p-2 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="clients-table-body">
+                                <!-- Dados serão preenchidos via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex justify-end mt-4">
+                        <button id="clear-all-clients" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
+                            Clear All Clients
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal do Relatório -->
+        <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center">
+            <div class="modal-content bg-[#FFF1F1] p-8 rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <div id="reportContent" class="space-y-4 bg-[#FFF1F1]">
+                    <!-- Logo do Relatório -->
+                    <div class="text-center mb-6">
+                        <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-YVvaxkDykvGsUiCRydgU4VPqOPq3bb.png" alt="Sweet Art Nana Logo" class="w-32 mx-auto">
+                    </div>
+
+                    <!-- Conteúdo do Relatório -->
+                    <div class="space-y-4">
+                        <div class="border-b border-secondary pb-2">
+                            <h3 class="text-lg font-playfair text-primary">Order Details</h3>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="font-medium text-primary text-sm">Client</h4>
+                                <p id="reportClientName" class="text-sm"></p>
+                                <p id="reportClientContact" class="text-sm"></p>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-primary text-sm">Delivery Date</h4>
+                                <p id="reportDueDate" class="text-sm"></p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="font-medium text-primary text-sm">Cake Details</h4>
+                            <p id="reportCakeType" class="text-sm"></p>
+                            <p id="reportCakeDetails" class="text-sm whitespace-pre-line"></p>
+                            <p id="reportCakePrice" class="text-sm font-medium"></p>
+                        </div>
+
+                        <div id="reportExtras">
+                            <h4 class="font-medium text-primary text-sm">Extra Sweets</h4>
+                            <p id="reportExtraDetails" class="text-sm whitespace-pre-line"></p>
+                            <p id="reportExtrasPrice" class="text-sm font-medium"></p>
+                        </div>
+
+                        <div id="reportPartyKit">
+                            <h4 class="font-medium text-primary text-sm">Customized Party Kit</h4>
+                            <p id="reportPartyKitDetails" class="text-sm whitespace-pre-line"></p>
+                            <p id="reportPartyKitPrice" class="text-sm font-medium"></p>
+                        </div>
+
+                        <div class="border-t border-secondary pt-2">
+                            <h4 class="font-medium text-primary text-sm">Values</h4>
+                            <div id="reportPrices" class="text-sm"></div>
+                            <div class="mt-2">
+                                <p class="text-sm">Subtotal: <span id="reportSubtotal"></span></p>
+                                <p id="reportDiscount" class="text-sm">Discount (<span id="reportDiscountPercent"></span>%): <span id="reportDiscountValue"></span></p>
+                                <p id="reportDeliveryFee" class="text-sm">Delivery Fee: <span id="reportDeliveryFeeValue"></span></p>
+                                <p class="font-medium text-sm">Total Value: <span id="reportTotal"></span></p>
+                                <p class="text-sm">Deposit (50%): <span id="reportSignal"></span></p>
+                                <p class="text-xs text-secondary mt-1">Deposit must be paid to secure the order.</p>
+                                <p class="text-xs text-secondary">Remaining balance can be paid up to one day before pickup.</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <h4 class="font-medium text-primary text-sm">Pickup Address</h4>
+                                <p class="text-sm">14 Breeze Street, Morayfield, 4506, QLD</p>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-primary text-sm">Bank Details</h4>
+                                <div class="text-sm">
+                                    <p>NAME: LIMA SANTOS A</p>
+                                    <p>BSB: 014305</p>
+                                    <p>ACCOUNT: 156541989</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="font-medium text-primary text-sm">Delivery Information</h4>
+                            <p id="reportDeliveryAddress" class="text-sm font-medium"></p>
+                            <p class="text-sm">If you prefer delivery, our service charges $10 AUD for every 10 km. For example, a 50 km delivery would incur a $50 AUD delivery fee.</p>
+                        </div>
+
+                        <div class="text-center text-secondary mt-4">
+                            <p class="text-sm">Thank you for choosing Sweet Art Nana! We appreciate your support and trust in us.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botões do Modal -->
+                <div class="mt-6 flex gap-4 mobile-stack">
+                    <button id="printReport" class="flex-1 bg-primary text-white px-4 py-2 rounded hover:bg-primary/90 transition">
+                        Print/Save PDF
+                    </button>
+                    <button id="closeReport" class="flex-1 bg-secondary text-white px-4 py-2 rounded hover:bg-secondary/90 transition">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Versão para impressão do relatório de pedido - sempre presente no DOM mas visível apenas na impressão -->
+    <div id="reportPrintable" class="print-only">
+        <div class="text-center">
+            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-YVvaxkDykvGsUiCRydgU4VPqOPq3bb.png" alt="Sweet Art Nana Logo" class="print-logo">
+        </div>
+        
+        <div class="print-section">
+            <h1 class="print-heading">Order Details</h1>
+        </div>
+        
+        <div class="print-grid print-section">
+            <div>
+                <h2 class="print-subheading">Client</h2>
+                <p id="print-client-name" class="print-text"></p>
+                <p id="print-client-contact" class="print-text"></p>
+            </div>
+            <div>
+                <h2 class="print-subheading">Delivery Date</h2>
+                <p id="print-due-date" class="print-text"></p>
+            </div>
+        </div>
+        
+        <div class="print-section">
+            <h2 class="print-subheading">Cake Details</h2>
+            <p id="print-cake-type" class="print-text"></p>
+            <p id="print-cake-details" class="print-text"></p>
+            <p id="print-cake-price" class="print-text"></p>
+        </div>
+        
+        <div id="print-extras" class="print-section">
+            <h2 class="print-subheading">Extra Sweets</h2>
+            <p id="print-extras-details" class="print-text"></p>
+            <p id="print-extras-price" class="print-text"></p>
+        </div>
+        
+        <div id="print-party-kit" class="print-section">
+            <h2 class="print-subheading">Customized Party Kit</h2>
+            <p id="print-party-kit-details" class="print-text"></p>
+            <p id="print-party-kit-price" class="print-text"></p>
+        </div>
+        
+        <div class="print-section print-border">
+            <h2 class="print-subheading">Values</h2>
+            <p class="print-text">Subtotal: <span id="print-subtotal"></span></p>
+            <p id="print-discount" class="print-text">Discount (<span id="print-discount-percent"></span>%): <span id="print-discount-value"></span></p>
+            <p id="print-delivery-fee" class="print-text">Delivery Fee: <span id="print-delivery-fee-value"></span></p>
+            <p class="print-text"><strong>Total Value: <span id="print-total"></span></strong></p>
+            <p class="print-text">Deposit (50%): <span id="print-deposit"></span></p>
+            <p class="print-text" style="color: #EB918F;">Deposit must be paid to secure the order.</p>
+            <p class="print-text" style="color: #EB918F;">Remaining balance can be paid up to one day before pickup.</p>
+        </div>
+        
+        <div class="print-grid print-section">
+            <div>
+                <h2 class="print-subheading">Pickup Address</h2>
+                <p class="print-text">14 Breeze Street, Morayfield, 4506, QLD</p>
+            </div>
+            <div>
+                <h2 class="print-subheading">Bank Details</h2>
+                <p class="print-text">NAME: LIMA SANTOS A</p>
+                <p class="print-text">BSB: 014305</p>
+                <p class="print-text">ACCOUNT: 156541989</p>
+            </div>
+        </div>
+        
+        <div class="print-section">
+            <h2 class="print-subheading">Delivery Information</h2>
+            <p id="print-delivery-address" class="print-text"></p>
+            <p class="print-text">If you prefer delivery, our service charges $10 AUD for every 10 km. For example, a 50 km delivery would incur a $50 AUD delivery fee.</p>
+        </div>
+        
+        <div class="print-footer">
+            <p class="print-text">Thank you for choosing Sweet Art Nana! We appreciate your support and trust in us.</p>
+        </div>
+    </div>
+
+    <!-- Versão para impressão do relatório de vendas -->
+    <div id="salesReportPrintable" class="print-only">
+        <div class="text-center">
+            <img src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-YVvaxkDykvGsUiCRydgU4VPqOPq3bb.png" alt="Sweet Art Nana Logo" class="print-logo">
+        </div>
+        
+        <div class="print-section">
+            <h1 class="print-heading">Sales Report</h1>
+            <p id="print-sales-period" class="print-text">Period: All Time</p>
+        </div>
+        
+        <div class="print-section">
+            <h2 class="print-subheading">Summary</h2>
+            <div class="print-grid">
+                <div>
+                    <p class="print-text">Total Orders: <strong id="print-total-orders">0</strong></p>
+                    <p class="print-text">Total Revenue: <strong id="print-total-revenue">AUD 0.00</strong></p>
+                </div>
+                <div>
+                    <p class="print-text">Average Order Value: <strong id="print-avg-order">AUD 0.00</strong></p>
+                    <p class="print-text">Total Discounts: <strong id="print-total-discounts">AUD 0.00</strong></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="print-section">
+            <h2 class="print-subheading">Revenue by Product Type</h2>
+            <div class="print-grid">
+                <div>
+                    <p class="print-text">Cakes: <strong id="print-cake-revenue">AUD 0.00</strong></p>
+                    <p class="print-text">Extra Sweets: <strong id="print-sweets-revenue">AUD 0.00</strong></p>
+                </div>
+                <div>
+                    <p class="print-text">Party Kits: <strong id="print-party-revenue">AUD 0.00</strong></p>
+                    <p class="print-text">Delivery Fees: <strong id="print-delivery-revenue">AUD 0.00</strong></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="print-section">
+            <h2 class="print-subheading">Order List</h2>
+            <table class="print-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Client</th>
+                        <th>Cake Type</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody id="print-orders-table">
+                    <!-- Será preenchido via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="print-footer">
+            <p class="print-text">Generated on <span id="print-generation-date"></span></p>
+            <p class="print-text">Sweet Art Nana - Sales Report</p>
+        </div>
+    </div>
+
+    <script>
+        // Funções auxiliares para localStorage
+        function getClients() {
+            return JSON.parse(localStorage.getItem('clients') || '[]');
+        }
+
+        function saveClients(clients) {
+            localStorage.setItem('clients', JSON.stringify(clients));
+        }
+
+        function getOrders() {
+            return JSON.parse(localStorage.getItem('orders') || '[]');
+        }
+
+        function saveOrders(orders) {
+            localStorage.setItem('orders', JSON.stringify(orders));
+        }
+
+        // Função para excluir um pedido
+        function deleteOrder(orderId) {
+            const orders = getOrders();
+            const updatedOrders = orders.filter(order => order.id != orderId);
+            saveOrders(updatedOrders);
+            
+            // Atualizar dashboard
+            updateSalesDashboard();
+            alert('Order deleted successfully!');
+        }
+
+        // Função para excluir um cliente
+        function deleteClient(clientId) {
+            const clients = getClients();
+            const orders = getOrders();
+            
+            // Verificar se o cliente tem pedidos
+            const hasOrders = orders.some(order => order.clientId == clientId);
+            
+            if (hasOrders) {
+                if (confirm('This client has orders. Deleting this client will also delete all associated orders. Continue?')) {
+                    // Excluir pedidos associados
+                    const updatedOrders = orders.filter(order => order.clientId != clientId);
+                    saveOrders(updatedOrders);
+                    
+                    // Excluir cliente
+                    const updatedClients = clients.filter(client => client.id != clientId);
+                    saveClients(updatedClients);
+                    
+                    updateClientSelect();
+                    updateSalesDashboard();
+                    updateClientTable();
+                    alert('Client and associated orders deleted successfully!');
+                }
+            } else {
+                // Excluir cliente sem pedidos
+                const updatedClients = clients.filter(client => client.id != clientId);
+                saveClients(updatedClients);
+                
+                updateClientSelect();
+                updateClientTable();
+                alert('Client deleted successfully!');
+            }
+        }
+
+        // Função para atualizar a tabela de clientes
+        function updateClientTable() {
+            const clients = getClients();
+            const tableBody = document.getElementById('clients-table-body');
+            tableBody.innerHTML = '';
+            
+            clients.forEach(client => {
+                const row = document.createElement('tr');
+                row.className = 'border-b border-secondary hover:bg-accent';
+                
+                row.innerHTML = `
+                    <td class="p-2">${client.name}</td>
+                    <td class="p-2">${client.email}</td>
+                    <td class="p-2">${client.phone}</td>
+                    <td class="p-2">${client.address || 'N/A'}</td>
+                    <td class="p-2 text-center">
+                        <button class="delete-client bg-red-500 text-white px-2 py-1 rounded text-xs" data-id="${client.id}">
+                            Delete
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Adicionar eventos aos botões de exclusão
+            document.querySelectorAll('.delete-client').forEach(button => {
+                button.addEventListener('click', function() {
+                    const clientId = this.getAttribute('data-id');
+                    if (confirm('Are you sure you want to delete this client?')) {
+                        deleteClient(clientId);
+                    }
+                });
+            });
+        }
+
+        // Evento para limpar todos os pedidos
+        document.getElementById('clear-all-orders').addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete ALL orders? This action cannot be undone.')) {
+                saveOrders([]);
+                updateSalesDashboard();
+                alert('All orders have been deleted.');
+            }
+        });
+
+        // Evento para limpar todos os clientes
+        document.getElementById('clear-all-clients').addEventListener('click', function() {
+            if (confirm('Are you sure you want to delete ALL clients? This will also delete ALL orders. This action cannot be undone.')) {
+                saveClients([]);
+                saveOrders([]);
+                updateClientSelect();
+                updateSalesDashboard();
+                updateClientTable();
+                alert('All clients and orders have been deleted.');
+            }
+        });
+
+        // Updated calculateTotal function
+        function calculateTotal() {
+            const cakePrice = parseFloat(document.getElementById('cakePrice').value) || 0;
+            const extraSweetsPrice = parseFloat(document.getElementById('extraSweetsPrice').value) || 0;
+            const partyKitPrice = parseFloat(document.getElementById('partyKitPrice').value) || 0;
+            const deliveryFee = parseFloat(document.getElementById('deliveryFee').value) || 0;
+            
+            const subtotal = cakePrice + extraSweetsPrice + partyKitPrice;
+            
+            // Calculate discount (not applied to delivery fee)
+            const discountPercent = parseFloat(document.getElementById('discountPercent').value) || 0;
+            const discountValue = (subtotal * discountPercent / 100).toFixed(2);
+            document.getElementById('discountValue').value = `AUD ${discountValue}`;
+            
+            // Total includes subtotal minus discount plus delivery fee
+            const total = subtotal - parseFloat(discountValue) + deliveryFee;
+            const signal = total / 2;
+
+            document.getElementById('totalValue').value = `AUD ${total.toFixed(2)}`;
+            document.getElementById('signalValue').value = `AUD ${signal.toFixed(2)}`;
+        }
+
+        // Eventos para calcular total
+        ['cakePrice', 'extraSweetsPrice', 'partyKitPrice', 'discountPercent', 'deliveryFee'].forEach(id => {
+            document.getElementById(id).addEventListener('input', calculateTotal);
+        });
+
+        // Adicionar cliente
+        document.getElementById('clientForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('clientName').value;
+            const email = document.getElementById('clientEmail').value;
+            const phone = document.getElementById('clientPhone').value;
+            const address = document.getElementById('clientAddress').value;
+            
+            const clients = getClients();
+            clients.push({ id: Date.now(), name, email, phone, address });
+            saveClients(clients);
+            
+            updateClientSelect();
+            this.reset();
+            alert('Client registered successfully!');
+        });
+
+        // Adicionar pedido
+        document.getElementById('orderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const clientId = document.getElementById('clientSelect').value;
+            const cakeType = document.getElementById('cakeType').value;
+            const cakeDetails = document.getElementById('cakeDetails').value;
+            const cakePrice = parseFloat(document.getElementById('cakePrice').value);
+            const dueDate = document.getElementById('dueDate').value;
+            const extraSweets = document.getElementById('extraSweets').value;
+            const extraSweetsPrice = parseFloat(document.getElementById('extraSweetsPrice').value) || 0;
+            const partyKit = document.getElementById('partyKit').value;
+            const partyKitPrice = parseFloat(document.getElementById('partyKitPrice').value) || 0;
+            const deliveryFee = parseFloat(document.getElementById('deliveryFee').value) || 0;
+            const discountPercent = parseFloat(document.getElementById('discountPercent').value) || 0;
+            const discountValue = parseFloat(document.getElementById('discountValue').value.replace('AUD ', '')) || 0;
+            const totalValue = parseFloat(document.getElementById('totalValue').value.replace('AUD ', ''));
+            const signalValue = parseFloat(document.getElementById('signalValue').value.replace('AUD ', ''));
+            
+            const orders = getOrders();
+            orders.push({
+                id: Date.now(),
+                clientId,
+                cakeType,
+                cakeDetails,
+                cakePrice,
+                dueDate,
+                extraSweets,
+                extraSweetsPrice,
+                partyKit,
+                partyKitPrice,
+                deliveryFee,
+                discountPercent,
+                discountValue,
+                totalValue,
+                signalValue,
+                orderDate: new Date().toISOString()
+            });
+            saveOrders(orders);
+            
+            alert('Order created successfully!');
+            this.reset();
+            document.getElementById('totalValue').value = '';
+            document.getElementById('signalValue').value = '';
+            document.getElementById('discountValue').value = '';
+            
+            // Atualizar o dashboard de vendas
+            updateSalesDashboard();
+        });
+
+        // Funções do relatório
+        const reportModal = document.getElementById('reportModal');
+        const generateReportBtn = document.getElementById('generateReport');
+        const closeReportBtn = document.getElementById('closeReport');
+        const printReportBtn = document.getElementById('printReport');
+
+        function formatPrice(value) {
+            return `AUD ${parseFloat(value).toFixed(2)}`;
+        }
+
+        // Updated generateReport function
+        function generateReport() {
+            const clientId = document.getElementById('clientSelect').value;
+            if (!clientId) {
+                alert('Please select a client first.');
+                return;
+            }
+
+            const clients = getClients();
+            const client = clients.find(c => c.id == clientId);
+
+            // Client information - Modal view
+            document.getElementById('reportClientName').textContent = `Name: ${client.name}`;
+            document.getElementById('reportClientContact').textContent = `Contact: ${client.phone} | ${client.email}`;
+            
+            // Client information - Print view
+            document.getElementById('print-client-name').textContent = `Name: ${client.name}`;
+            document.getElementById('print-client-contact').textContent = `Contact: ${client.phone} | ${client.email}`;
+        
+            // Order information - Modal view
+            const dueDate = document.getElementById('dueDate').value;
+            document.getElementById('reportDueDate').textContent = dueDate;
+            
+            const cakeType = document.getElementById('cakeType').value;
+            document.getElementById('reportCakeType').textContent = cakeType;
+            
+            const cakeDetails = document.getElementById('cakeDetails').value;
+            document.getElementById('reportCakeDetails').textContent = cakeDetails;
+            
+            const cakePrice = parseFloat(document.getElementById('cakePrice').value) || 0;
+            document.getElementById('reportCakePrice').textContent = `Cake Price: ${formatPrice(cakePrice)}`;
+            
+            // Order information - Print view
+            document.getElementById('print-due-date').textContent = dueDate;
+            document.getElementById('print-cake-type').textContent = cakeType;
+            document.getElementById('print-cake-details').textContent = cakeDetails;
+            document.getElementById('print-cake-price').textContent = `Cake Price: ${formatPrice(cakePrice)}`;
+
+            // Extra Sweets - Modal view
+            const extraSweetsContent = document.getElementById('extraSweets').value;
+            const extraSweetsPrice = parseFloat(document.getElementById('extraSweetsPrice').value) || 0;
+            if (!extraSweetsContent && extraSweetsPrice === 0) {
+                document.getElementById('reportExtras').style.display = 'none';
+                document.getElementById('print-extras').style.display = 'none';
+            } else {
+                document.getElementById('reportExtras').style.display = 'block';
+                document.getElementById('print-extras').style.display = 'block';
+                document.getElementById('reportExtraDetails').textContent = extraSweetsContent;
+                document.getElementById('reportExtrasPrice').textContent = `Extra Sweets Price: ${formatPrice(extraSweetsPrice)}`;
+                
+                // Extra Sweets - Print view
+                document.getElementById('print-extras-details').textContent = extraSweetsContent;
+                document.getElementById('print-extras-price').textContent = `Extra Sweets Price: ${formatPrice(extraSweetsPrice)}`;
+            }
+
+            // Party Kit - Modal view
+            const partyKitContent = document.getElementById('partyKit').value;
+            const partyKitPrice = parseFloat(document.getElementById('partyKitPrice').value) || 0;
+            if (!partyKitContent && partyKitPrice === 0) {
+                document.getElementById('reportPartyKit').style.display = 'none';
+                document.getElementById('print-party-kit').style.display = 'none';
+            } else {
+                document.getElementById('reportPartyKit').style.display = 'block';
+                document.getElementById('print-party-kit').style.display = 'block';
+                document.getElementById('reportPartyKitDetails').textContent = partyKitContent;
+                document.getElementById('reportPartyKitPrice').textContent = `Party Kit Price: ${formatPrice(partyKitPrice)}`;
+                
+                // Party Kit - Print view
+                document.getElementById('print-party-kit-details').textContent = partyKitContent;
+                document.getElementById('print-party-kit-price').textContent = `Party Kit Price: ${formatPrice(partyKitPrice)}`;
+            }
+
+            // Delivery Address - Modal view
+            document.getElementById('reportDeliveryAddress').textContent = client.address || 'No delivery address provided.';
+            
+            // Delivery Address - Print view
+            document.getElementById('print-delivery-address').textContent = client.address || 'No delivery address provided.';
+
+            // Final values
+            const subtotal = cakePrice + extraSweetsPrice + partyKitPrice;
+            const discountPercent = parseFloat(document.getElementById('discountPercent').value) || 0;
+            const discountValue = (subtotal * discountPercent / 100);
+            const deliveryFee = parseFloat(document.getElementById('deliveryFee').value) || 0;
+            const total = subtotal - discountValue + deliveryFee;
+            const deposit = total / 2;
+
+            // Values - Modal view
+            document.getElementById('reportSubtotal').textContent = formatPrice(subtotal);
+            
+            if (discountPercent > 0) {
+                document.getElementById('reportDiscount').style.display = 'block';
+                document.getElementById('reportDiscountPercent').textContent = discountPercent;
+                document.getElementById('reportDiscountValue').textContent = formatPrice(discountValue);
+            } else {
+                document.getElementById('reportDiscount').style.display = 'none';
+            }
+            
+            if (deliveryFee > 0) {
+                document.getElementById('reportDeliveryFee').style.display = 'block';
+                document.getElementById('reportDeliveryFeeValue').textContent = formatPrice(deliveryFee);
+            } else {
+                document.getElementById('reportDeliveryFee').style.display = 'none';
+            }
+            
+            document.getElementById('reportTotal').textContent = formatPrice(total);
+            document.getElementById('reportSignal').textContent = formatPrice(deposit);
+            
+            // Values - Print view
+            document.getElementById('print-subtotal').textContent = formatPrice(subtotal);
+            
+            if (discountPercent > 0) {
+                document.getElementById('print-discount').style.display = 'block';
+                document.getElementById('print-discount-percent').textContent = discountPercent;
+                document.getElementById('print-discount-value').textContent = formatPrice(discountValue);
+            } else {
+                document.getElementById('print-discount').style.display = 'none';
+            }
+            
+            if (deliveryFee > 0) {
+                document.getElementById('print-delivery-fee').style.display = 'block';
+                document.getElementById('print-delivery-fee-value').textContent = formatPrice(deliveryFee);
+            } else {
+                document.getElementById('print-delivery-fee').style.display = 'none';
+            }
+            
+            document.getElementById('print-total').textContent = formatPrice(total);
+            document.getElementById('print-deposit').textContent = formatPrice(deposit);
+
+            // Show modal
+            reportModal.classList.remove('hidden');
+            reportModal.classList.add('flex');
+        }
+
+        generateReportBtn.addEventListener('click', generateReport);
+
+        closeReportBtn.addEventListener('click', () => {
+            reportModal.classList.add('hidden');
+            reportModal.classList.remove('flex');
+        });
+
+        printReportBtn.addEventListener('click', () => {
+            // Configurar para imprimir apenas o relatório de pedido
+            document.getElementById('reportPrintable').style.display = 'block';
+            document.getElementById('salesReportPrintable').style.display = 'none';
+            window.print();
+        });
+
+        // Fechar modal ao clicar fora
+        reportModal.addEventListener('click', (e) => {
+            if (e.target === reportModal) {
+                reportModal.classList.add('hidden');
+                reportModal.classList.remove('flex');
+            }
+        });
+
+        // Atualizar select de clientes
+        function updateClientSelect() {
+            const clientSelect = document.getElementById('clientSelect');
+            const clients = getClients();
+            
+            clientSelect.innerHTML = '<option value="">Select a Client</option>' + 
+                clients.map(client => `<option value="${client.id}">${client.name} (${client.phone})</option>`).join('');
+        }
+
+        // Funções para o Dashboard de Vendas
+        function updateSalesDashboard(filteredOrders = null) {
+            const orders = filteredOrders || getOrders();
+            const clients = getClients();
+            
+            // Calcular estatísticas
+            const totalOrders = orders.length;
+            const totalRevenue = orders.reduce((sum, order) => sum + order.totalValue, 0);
+            const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+            const totalDiscounts = orders.reduce((sum, order) => sum + order.discountValue, 0);
+            
+            // Calcular receita por tipo de produto
+            const cakeRevenue = orders.reduce((sum, order) => sum + order.cakePrice, 0);
+            const sweetsRevenue = orders.reduce((sum, order) => sum + (order.extraSweetsPrice || 0), 0);
+            const partyRevenue = orders.reduce((sum, order) => sum + (order.partyKitPrice || 0), 0);
+            const deliveryRevenue = orders.reduce((sum, order) => sum + (order.deliveryFee || 0), 0);
+            
+            // Atualizar estatísticas na interface
+            document.getElementById('total-orders').textContent = totalOrders;
+            document.getElementById('total-revenue').textContent = formatPrice(totalRevenue);
+            document.getElementById('avg-order').textContent = formatPrice(avgOrderValue);
+            document.getElementById('total-discounts').textContent = formatPrice(totalDiscounts);
+            
+            // Atualizar gráfico de produtos
+            document.getElementById('cake-revenue').textContent = formatPrice(cakeRevenue);
+            document.getElementById('sweets-revenue').textContent = formatPrice(sweetsRevenue);
+            document.getElementById('party-revenue').textContent = formatPrice(partyRevenue);
+            document.getElementById('delivery-revenue').textContent = formatPrice(deliveryRevenue);
+            
+            // Calcular porcentagens para as barras
+            const maxRevenue = Math.max(cakeRevenue, sweetsRevenue, partyRevenue, deliveryRevenue);
+            if (maxRevenue > 0) {
+                document.getElementById('cake-bar').style.width = `${(cakeRevenue / maxRevenue * 100)}%`;
+                document.getElementById('sweets-bar').style.width = `${(sweetsRevenue / maxRevenue * 100)}%`;
+                document.getElementById('party-bar').style.width = `${(partyRevenue / maxRevenue * 100)}%`;
+                document.getElementById('delivery-bar').style.width = `${(deliveryRevenue / maxRevenue * 100)}%`;
+            }
+            
+            // Gerar gráfico de tendência mensal
+            generateMonthlyChart(orders);
+            
+            // Preencher tabela de pedidos
+            const tableBody = document.getElementById('orders-table-body');
+            tableBody.innerHTML = '';
+
+            orders.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate)).forEach(order => {
+                const client = clients.find(c => c.id == order.clientId) || { name: 'Unknown' };
+                const row = document.createElement('tr');
+                row.className = 'border-b border-secondary hover:bg-accent';
+                
+                const orderDate = new Date(order.orderDate);
+                const formattedOrderDate = orderDate.toLocaleDateString();
+                
+                row.innerHTML = `
+                    <td class="p-2">${formattedOrderDate}</td>
+                    <td class="p-2">${client.name}</td>
+                    <td class="p-2">${order.cakeType}</td>
+                    <td class="p-2">${order.dueDate}</td>
+                    <td class="p-2 text-right">${formatPrice(order.cakePrice)}</td>
+                    <td class="p-2 text-right">${formatPrice(order.extraSweetsPrice || 0)}</td>
+                    <td class="p-2 text-right">${formatPrice(order.partyKitPrice || 0)}</td>
+                    <td class="p-2 text-right">${formatPrice(order.deliveryFee || 0)}</td>
+                    <td class="p-2 text-right">${formatPrice(order.discountValue || 0)}</td>
+                    <td class="p-2 text-right font-medium">${formatPrice(order.totalValue)}</td>
+                    <td class="p-2 text-center">
+                        <button class="delete-order bg-red-500 text-white px-2 py-1 rounded text-xs" data-id="${order.id}">
+                            Delete
+                        </button>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+
+            // Adicionar eventos aos botões de exclusão
+            document.querySelectorAll('.delete-order').forEach(button => {
+                button.addEventListener('click', function() {
+                    const orderId = this.getAttribute('data-id');
+                    if (confirm('Are you sure you want to delete this order?')) {
+                        deleteOrder(orderId);
+                    }
+                });
+            });
+            
+            // Atualizar dados para impressão do relatório de vendas
+            document.getElementById('print-total-orders').textContent = totalOrders;
+            document.getElementById('print-total-revenue').textContent = formatPrice(totalRevenue);
+            document.getElementById('print-avg-order').textContent = formatPrice(avgOrderValue);
+            document.getElementById('print-total-discounts').textContent = formatPrice(totalDiscounts);
+            
+            document.getElementById('print-cake-revenue').textContent = formatPrice(cakeRevenue);
+            document.getElementById('print-sweets-revenue').textContent = formatPrice(sweetsRevenue);
+            document.getElementById('print-party-revenue').textContent = formatPrice(partyRevenue);
+            document.getElementById('print-delivery-revenue').textContent = formatPrice(deliveryRevenue);
+            
+            // Preencher tabela de pedidos para impressão
+            const printTable = document.getElementById('print-orders-table');
+            printTable.innerHTML = '';
+            
+            orders.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate)).forEach(order => {
+                const client = clients.find(c => c.id == order.clientId) || { name: 'Unknown' };
+                const row = document.createElement('tr');
+                
+                const orderDate = new Date(order.orderDate);
+                const formattedOrderDate = orderDate.toLocaleDateString();
+                
+                row.innerHTML = `
+                    <td>${formattedOrderDate}</td>
+                    <td>${client.name}</td>
+                    <td>${order.cakeType}</td>
+                    <td>${formatPrice(order.totalValue)}</td>
+                `;
+                
+                printTable.appendChild(row);
+            });
+            
+            // Data de geração do relatório
+            const now = new Date();
+            document.getElementById('print-generation-date').textContent = now.toLocaleString();
+        }
+        
+        function generateMonthlyChart(orders) {
+            // Agrupar pedidos por mês
+            const monthlyData = {};
+            
+            orders.forEach(order => {
+                const date = new Date(order.orderDate);
+                const monthYear = `${date.getMonth() + 1}/${date.getFullYear()}`;
+                
+                if (!monthlyData[monthYear]) {
+                    monthlyData[monthYear] = 0;
+                }
+                
+                monthlyData[monthYear] += order.totalValue;
+            });
+            
+            // Ordenar meses
+            const sortedMonths = Object.keys(monthlyData).sort((a, b) => {
+                const [monthA, yearA] = a.split('/').map(Number);
+                const [monthB, yearB] = b.split('/').map(Number);
+                
+                if (yearA !== yearB) {
+                    return yearA - yearB;
+                }
+                
+                return monthA - monthB;
+            });
+            
+            // Limitar a 12 meses mais recentes
+            const recentMonths = sortedMonths.slice(-12);
+            
+            // Encontrar valor máximo para escala
+            const maxValue = Math.max(...recentMonths.map(month => monthlyData[month]));
+            
+            // Gerar barras
+            const barsContainer = document.getElementById('monthly-bars');
+            barsContainer.innerHTML = '';
+            
+            recentMonths.forEach(month => {
+                const value = monthlyData[month];
+                const percentage = (value / maxValue * 100);
+                
+                const barContainer = document.createElement('div');
+                barContainer.className = 'flex flex-col items-center';
+                
+                const bar = document.createElement('div');
+                bar.className = 'bg-secondary w-8 rounded-t';
+                bar.style.height = `${percentage}%`;
+                
+                const label = document.createElement('div');
+                label.className = 'text-xs mt-1 text-primary';
+                label.textContent = month;
+                
+                const valueLabel = document.createElement('div');
+                valueLabel.className = 'text-xs font-medium text-primary';
+                valueLabel.textContent = formatPrice(value);
+                
+                barContainer.appendChild(bar);
+                barContainer.appendChild(label);
+                barContainer.appendChild(valueLabel);
+                
+                barsContainer.appendChild(barContainer);
+            });
+        }
+        
+        // Filtros de período
+        function filterOrdersByPeriod(period) {
+            const orders = getOrders();
+            const now = new Date();
+            let filteredOrders = [];
+            let periodText = '';
+            
+            switch (period) {
+                case 'today':
+                    filteredOrders = orders.filter(order => {
+                        const orderDate = new Date(order.orderDate);
+                        return orderDate.toDateString() === now.toDateString();
+                    });
+                    periodText = 'Today';
+                    break;
+                    
+                case 'week':
+                    const weekStart = new Date(now);
+                    weekStart.setDate(now.getDate() - now.getDay());
+                    weekStart.setHours(0, 0, 0, 0);
+                    
+                    filteredOrders = orders.filter(order => {
+                        const orderDate = new Date(order.orderDate);
+                        return orderDate >= weekStart;
+                    });
+                    periodText = `This Week (${weekStart.toLocaleDateString()} - ${now.toLocaleDateString()})`;
+                    break;
+                    
+                case 'month':
+                    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+                    
+                    filteredOrders = orders.filter(order => {
+                        const orderDate = new Date(order.orderDate);
+                        return orderDate >= monthStart;
+                    });
+                    periodText = `This Month (${monthStart.toLocaleDateString()} - ${now.toLocaleDateString()})`;
+                    break;
+                    
+                case 'year':
+                    const yearStart = new Date(now.getFullYear(), 0, 1);
+                    
+                    filteredOrders = orders.filter(order => {
+                        const orderDate = new Date(order.orderDate);
+                        return orderDate >= yearStart;
+                    });
+                    periodText = `This Year (${yearStart.getFullYear()})`;
+                    break;
+                    
+                case 'custom':
+                    const fromDate = new Date(document.getElementById('date-from').value);
+                    const toDate = new Date(document.getElementById('date-to').value);
+                    toDate.setHours(23, 59, 59, 999);
+                    
+                    if (isNaN(fromDate.getTime()) || isNaN(toDate.getTime())) {
+                        alert('Please select valid dates for custom range.');
+                        return;
+                    }
+                    
+                    filteredOrders = orders.filter(order => {
+                        const orderDate = new Date(order.orderDate);
+                        return orderDate >= fromDate && orderDate <= toDate;
+                    });
+                    periodText = `Custom Range (${fromDate.toLocaleDateString()} - ${toDate.toLocaleDateString()})`;
+                    break;
+                    
+                default: // all
+                    filteredOrders = orders;
+                    periodText = 'All Time';
+                    break;
+            }
+            
+            // Atualizar o texto do período no relatório impresso
+            document.getElementById('print-sales-period').textContent = `Period: ${periodText}`;
+            
+            // Atualizar dashboard com os pedidos filtrados
+            updateSalesDashboard(filteredOrders);
+            
+            // Atualizar aparência dos botões
+            document.querySelectorAll('#filter-all, #filter-today, #filter-week, #filter-month, #filter-year').forEach(btn => {
+                btn.classList.remove('bg-primary');
+                btn.classList.add('bg-secondary');
+            });
+            
+            if (period !== 'custom') {
+                document.getElementById(`filter-${period}`).classList.remove('bg-secondary');
+                document.getElementById(`filter-${period}`).classList.add('bg-primary');
+            }
+        }
+        
+        // Eventos dos filtros
+        document.getElementById('filter-all').addEventListener('click', () => filterOrdersByPeriod('all'));
+        document.getElementById('filter-today').addEventListener('click', () => filterOrdersByPeriod('today'));
+        document.getElementById('filter-week').addEventListener('click', () => filterOrdersByPeriod('week'));
+        document.getElementById('filter-month').addEventListener('click', () => filterOrdersByPeriod('month'));
+        document.getElementById('filter-year').addEventListener('click', () => filterOrdersByPeriod('year'));
+        document.getElementById('filter-custom').addEventListener('click', () => filterOrdersByPeriod('custom'));
+        
+        // Imprimir relatório de vendas
+        document.getElementById('print-sales-report').addEventListener('click', () => {
+            // Configurar para imprimir apenas o relatório de vendas
+            document.getElementById('reportPrintable').style.display = 'none';
+            document.getElementById('salesReportPrintable').style.display = 'block';
+            window.print();
+        });
+        
+        // Navegação por tabs
+        document.getElementById('tab-orders').addEventListener('click', function() {
+            document.getElementById('content-orders').classList.remove('hidden');
+            document.getElementById('content-sales').classList.add('hidden');
+            
+            document.getElementById('tab-orders').classList.add('tab-active');
+            document.getElementById('tab-sales').classList.remove('tab-active');
+        });
+        
+        document.getElementById('tab-sales').addEventListener('click', function() {
+            document.getElementById('content-orders').classList.add('hidden');
+            document.getElementById('content-sales').classList.remove('hidden');
+            
+            document.getElementById('tab-orders').classList.remove('tab-active');
+            document.getElementById('tab-sales').classList.add('tab-active');
+            
+            // Atualizar dashboard e tabela de clientes ao abrir a tab
+            updateSalesDashboard();
+            updateClientTable();
+        });
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
+
+        // PWA Installation
+        let deferredPrompt;
+        const pwaInstallPrompt = document.getElementById('pwa-install-prompt');
+        const pwaInstallButton = document.getElementById('pwa-install-button');
+        const pwaCloseButton = document.getElementById('pwa-close-button');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show the install prompt
+            pwaInstallPrompt.style.display = 'flex';
+        });
+
+        pwaInstallButton.addEventListener('click', () => {
+            // Hide the app provided install prompt
+            pwaInstallPrompt.style.display = 'none';
+            // Show the browser install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                } else {
+                    console.log('User dismissed the install prompt');
+                }
+                deferredPrompt = null;
+            });
+        });
+
+        pwaCloseButton.addEventListener('click', () => {
+            pwaInstallPrompt.style.display = 'none';
+        });
+
+        // Inicializar
+        updateClientSelect();
+        updateClientTable();
+    </script>
+</body>
+</html>
