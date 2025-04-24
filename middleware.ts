@@ -1,6 +1,4 @@
-import { NextResponse } from 'next/server';
-
-export function middleware(req: Request) {
+export default function middleware(req: Request) {
   try {
     const basicAuth = req.headers.get('authorization');
 
@@ -9,7 +7,7 @@ export function middleware(req: Request) {
       const [user, pass] = atob(authValue).split(':');
 
       if (user === 'admin' && pass === '12345') {
-        return NextResponse.next(); // Permite a requisição
+        return new Response(null, { status: 200 }); // Permite a requisição
       }
     }
 
