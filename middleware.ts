@@ -1,4 +1,6 @@
-export default function middleware(req: Request) {
+import { NextResponse } from 'next/server';
+
+export function middleware(req: Request) {
   try {
     const basicAuth = req.headers.get('authorization');
 
@@ -7,7 +9,7 @@ export default function middleware(req: Request) {
       const [user, pass] = atob(authValue).split(':');
 
       if (user === 'admin' && pass === '12345') {
-        return new Response(null, { status: 200 }); // Permite a requisição
+        return NextResponse.next(); // Permite a requisição
       }
     }
 
@@ -19,8 +21,8 @@ export default function middleware(req: Request) {
       },
     });
   } catch (error) {
-    // Retorna um erro 500 se algo falhar na execução do middleware
     console.error('Erro no middleware:', error);
+    // Retorna erro 500 se algo falhar
     return new Response('Erro interno no servidor', { status: 500 });
   }
 }
